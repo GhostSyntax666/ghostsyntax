@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GHOST SYNTAX - Login</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00ff00;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .login-container {
+            background: rgba(0, 20, 0, 0.7);
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            box-shadow: 0 0 30px #00ff0044;
+            padding: 40px 30px 30px 30px;
+            min-width: 320px;
+            z-index: 2;
+            position: relative;
+        }
+        .login-title {
+            font-size: 2em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .login-form input {
+            background: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            padding: 10px;
+            border-radius: 5px;
+            outline: none;
+        }
+        .login-form input::placeholder {
+            color: #0a0;
+        }
+        .login-form button {
+            background: linear-gradient(45deg, #000, #0a0a0a);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .login-form button:hover {
+            background: #0a0a0a;
+            box-shadow: 0 0 10px #00ff00;
+        }
+        .error-message {
+            color: #ff3333;
+            background: #200;
+            border: 1px solid #f00;
+            border-radius: 4px;
+            padding: 7px 10px;
+            margin-bottom: 5px;
+            text-align: center;
+            font-size: 0.95em;
+            display: none;
+        }
+        .lockout-message {
+            color: #ff0;
+            background: #222200;
+            border: 1px solid #ff0;
+            border-radius: 4px;
+            padding: 7px 10px;
+            margin-bottom: 5px;
+            text-align: center;
+            font-size: 0.95em;
+            display: none;
+        }
+        .matrix-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .matrix-rain {
+            position: absolute;
+            color: #0f0;
+            font-size: 16px;
+            line-height: 16px;
+            text-shadow: 0 0 8px #0f0, 0 0 12px #0f0;
+            animation: matrix-fall 3s linear infinite;
+            opacity: 0.7;
+        }
+        @keyframes matrix-fall {
+            0% { transform: translateY(-100vh); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+    </style>
+    <!-- PLACEHOLDER: Insert your Firebase <script> tags and config below this line -->
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-analytics.js";
+      import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDwc9uQLsNFdME81E6jXIQ6j2Fe0RYcRNQ",
+        authDomain: "ghostsyntax.firebaseapp.com",
+        projectId: "ghostsyntax",
+        storageBucket: "ghostsyntax.firebasestorage.app",
+        messagingSenderId: "810099288797",
+        appId: "1:810099288797:web:ab553b2077a11db7e40934",
+        measurementId: "G-WF7VJRL1W2"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const auth = getAuth(app);
+
+      // Brute-force protection variables
+      let failedAttempts = 0;
+      const maxAttempts = 5;
+      let lockoutUntil = null;
+      const lockoutDuration = 60 * 1000; // 1 minute
+
+      // Replace with your URLs
+      const REAL_SITE_URL = "https://ghostsyntax.github.io/ghostsyntaxrealwebsiteofchattingandmessaginewherenoonecanenter";
+      const FAKE_SITE_URL = "https://ghostsyntax.github.io/hahahayougotscammedlolnoobscriptkitty";
+
+      document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const errorMsg = document.getElementById('errorMsg');
+        const lockoutMsg = document.getElementById('lockoutMsg');
+        errorMsg.style.display = 'none';
+        lockoutMsg.style.display = 'none';
+
+        // Brute-force lockout check
+        if (lockoutUntil && Date.now() < lockoutUntil) {
+          lockoutMsg.textContent = `Too many failed attempts. Try again in ${Math.ceil((lockoutUntil - Date.now())/1000)} seconds.`;
+          lockoutMsg.style.display = 'block';
+          return;
+        }
+
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          window.location.href = REAL_SITE_URL;
+        } catch (err) {
+          failedAttempts++;
+          if (failedAttempts >= maxAttempts) {
+            lockoutUntil = Date.now() + lockoutDuration;
+            lockoutMsg.textContent = `Too many failed attempts. Try again in 60 seconds.`;
+            lockoutMsg.style.display = 'block';
+            setTimeout(() => {
+              failedAttempts = 0;
+              lockoutUntil = null;
+              lockoutMsg.style.display = 'none';
+            }, lockoutDuration);
+          } else {
+            errorMsg.textContent = 'Invalid email or password.';
+            errorMsg.style.display = 'block';
+          }
+          // Redirect to fake site on failed login
+          setTimeout(() => {
+            window.location.href = FAKE_SITE_URL;
+          }, 1200);
+        }
+      });
+    </script>
+    <!-- END PLACEHOLDER -->
+</head>
+<body>
+    <div class="matrix-bg" id="matrixBg"></div>
+    <div class="login-container">
+        <div class="login-title">GHOST SYNTAX LOGIN</div>
+        <div class="error-message" id="errorMsg"></div>
+        <div class="lockout-message" id="lockoutMsg"></div>
+        <form class="login-form" id="loginForm" autocomplete="off">
+            <input type="email" id="email" placeholder="Email" required autocomplete="username">
+            <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
+            <button type="submit">LOGIN</button>
+        </form>
+    </div>
+    <script>
+        // Matrix Rain Effect (copied from index2.html)
+        function createMatrixRain() {
+            const matrixBg = document.getElementById('matrixBg');
+            const words = [
+                'ACCESS', 'GRANTED', 'ENCRYPTED', 'GHOST', 'SYNTAX', 'SECURE', 'TERMINAL', 'PROTOCOL', 'DATA', 'ACTIVE', 'GREEN', 'CONNECTED', 'AUTH', '0x1A2B', 'SYS:OK', 'RUNNING', 'SYNC', 'LOADING', 'READY', 'ONLINE', 'NO SIGNAL', 'ERROR', 'RETRY', 'COMPLETE', 'PROCESSING', 'UPLINK', 'DOWNLINK', 'NODE', 'GATEWAY', 'FIREWALL', 'TRACE', 'ANALYZE', 'OVERRIDE', 'SYSTEM', 'STATUS', 'CODE', 'PACKET', 'LINK', 'PORT', 'SCAN', 'PING', 'RESPONSE', 'INPUT', 'OUTPUT', 'BUFFER', 'STACK', 'QUEUE', 'THREAD', 'PROCESS', 'MEMORY', 'CACHE', 'ROUTER', 'SWITCH', 'BRIDGE', 'SERVER', 'CLIENT', 'HOST', 'DOMAIN', 'PROXY', 'VPN', 'SSH', 'TLS', 'SSL', 'HASH', 'KEY', 'TOKEN', 'SIGNAL', 'BINARY', 'HEX', 'DEC', 'OCT', 'ALERT', 'LOG', 'DEBUG', 'INFO', 'WARN', 'CRITICAL', 'FATAL', 'BOOT', 'SHUTDOWN', 'RESTART', 'UPDATE', 'INSTALL', 'REMOVE', 'CONFIG', 'SETUP', 'ADMIN', 'USER', 'GUEST', 'ROOT', 'SUDO', 'CMD', 'SHELL', 'CONSOLE', 'SCRIPT', 'EXEC', 'RUN', 'STOP', 'PAUSE', 'RESUME', 'QUEUE', 'STACK', 'HEAP', 'ARRAY', 'LIST', 'MAP', 'DICT', 'OBJECT', 'CLASS', 'FUNC', 'VAR', 'CONST', 'LET', 'IMPORT', 'EXPORT', 'MODULE', 'PACKAGE', 'LIB', 'FRAME', 'THREAD', 'TASK', 'EVENT', 'CALL', 'RETURN', 'YIELD', 'ASYNC', 'AWAIT', 'PROMISE', 'FETCH', 'SEND', 'RECEIVE', 'CONNECT', 'DISCONNECT', 'OPEN', 'CLOSE', 'READ', 'WRITE', 'LOAD', 'SAVE', 'BACKUP', 'RESTORE', 'SYNC', 'DESYNC', 'LOCK', 'UNLOCK', 'GRANT', 'DENY', 'ALLOW', 'BLOCK', 'DROP', 'FORWARD', 'REVERSE', 'INBOUND', 'OUTBOUND', 'INTERNAL', 'EXTERNAL', 'LOCAL', 'REMOTE', 'PUBLIC', 'PRIVATE', 'PROTECTED', 'STATIC', 'DYNAMIC', 'VIRTUAL', 'PHYSICAL', 'LOGIC', 'ERROR', 'SUCCESS', 'FAIL', 'TRUE', 'FALSE', 'NULL', 'UNDEFINED', 'NAN', 'INFINITY', 'ZERO', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE'
+            ];
+            for (let i = 0; i < 100; i++) {
+                const rain = document.createElement('div');
+                rain.className = 'matrix-rain';
+                rain.style.left = Math.random() * 100 + '%';
+                rain.style.animationDelay = Math.random() * 1.5 + 's';
+                rain.style.animationDuration = (Math.random() * 1.5 + 1.2) + 's';
+                rain.style.opacity = 0.3 + Math.random() * 0.4;
+                const word = words[Math.floor(Math.random() * words.length)];
+                rain.innerHTML = word;
+                matrixBg.appendChild(rain);
+            }
+        }
+        createMatrixRain();
+
+        (function() {
+            const basePath = '/ghostsyntax/';
+            const changeInterval = 50; // 1000/50 = 20 times per second
+
+            function generateRandomCode(length) {
+                const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+                let code = '';
+                for (let i = 0; i < length; i++) {
+                    code += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                return code;
+            }
+
+            setInterval(() => {
+                const part1 = generateRandomCode(8);
+                const part2 = generateRandomCode(8);
+                const part3 = generateRandomCode(8);
+                const newUrl = basePath + part1 + '-' + part2 + '-' + part3;
+                history.replaceState(null, '', newUrl);
+            }, changeInterval);
+        })();
+    </script>
+</body>
+</html>
