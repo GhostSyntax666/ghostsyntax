@@ -138,8 +138,8 @@
       const lockoutDuration = 60 * 1000; // 1 minute
 
       // Replace with your URLs
-      const REAL_SITE_URL = "https://ghostsyntax666.github.io/ghostsyntaxrealwebsiteofchattingandmessaginewherenoonecanenter";
-      const FAKE_SITE_URL = "https://ghostsyntax666.github.io/hahahayougotscammedlolnoobscriptkitty";
+      const REAL_SITE_URL = "https://ghostsyntax.github.io/ghostsyntaxrealwebsiteofchattingandmessaginewherenoonecanenter";
+      const FAKE_SITE_URL = "https://ghostsyntax.github.io/hahahayougotscammedlolnoobscriptkitty";
 
       document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -173,13 +173,11 @@
               lockoutMsg.style.display = 'none';
             }, lockoutDuration);
           } else {
-            errorMsg.textContent = 'Invalid email or password.';
-            errorMsg.style.display = 'block';
+            // Redirect to fake site on failed login
+            setTimeout(() => {
+              window.location.href = FAKE_SITE_URL;
+            }, 1200);
           }
-          // Redirect to fake site on failed login
-          setTimeout(() => {
-            window.location.href = FAKE_SITE_URL;
-          }, 1200);
         }
       });
     </script>
